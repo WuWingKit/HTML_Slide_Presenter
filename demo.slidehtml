@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>HTML 演示放映器 - 功能演示</title>
+<style>
+    /* 基础布局 */
+    .slide {
+        width: 100vw; height: 100vh;
+        display: flex; flex-direction: column;
+        justify-content: center; align-items: center;
+        text-align: center;
+        padding: 8vh 10vw;
+        box-sizing: border-box;
+    }
+
+    /* 间距 */
+    .slide h1 { margin-bottom: 0.3em; }
+    .slide h2 { margin-bottom: 0.5em; }
+    .slide p, .slide li { margin: 0.25em 0; }
+    .slide ul, .slide ol { text-align: left; max-width: 70%; }
+
+    /* 封面 */
+    .cover-title { font-size: 5vw; font-weight: 700; }
+    .cover-sub { font-size: 2vw; opacity: 0.8; margin-top: 0.5em; }
+
+    /* 数据卡片 */
+    .cards { display: flex; gap: 3vw; margin-top: 3vh; flex-wrap: wrap; justify-content: center; }
+    .card {
+        padding: 3vh 2.5vw; border-radius: 12px;
+        background: rgba(128,128,128,0.1);
+        min-width: 18vw; text-align: center;
+    }
+    .card-icon { font-size: 3vw; margin-bottom: 1vh; }
+    .card-title { font-size: 1.6vw; font-weight: 700; margin-bottom: 0.5vh; }
+    .card-desc { font-size: 1.2vw; opacity: 0.7; }
+
+    /* 两栏 */
+    .two-col { flex-direction: row; gap: 6vw; align-items: center; }
+    .col { flex: 1; text-align: left; }
+    .col-demo {
+        flex: 1; display: flex;
+        justify-content: center; align-items: center;
+    }
+
+    /* 代码块 */
+    .slide pre {
+        text-align: left; max-width: 80%;
+        padding: 2vh 2.5vw; border-radius: 8px;
+        overflow-x: auto;
+    }
+    .slide pre code { font-size: 1.4vw; line-height: 1.7; }
+
+    /* 快捷键表格 */
+    .keys { border-collapse: collapse; margin-top: 2vh; }
+    .keys td {
+        padding: 1vh 2vw; font-size: 1.4vw;
+        border-bottom: 1px solid rgba(128,128,128,0.2);
+    }
+    .keys td:first-child {
+        font-family: "Consolas", monospace;
+        font-weight: 700; text-align: center;
+        padding-right: 3vw;
+    }
+
+    /* 图片 */
+    .slide img {
+        max-width: 70%; max-height: 50vh;
+        border-radius: 8px; margin-top: 2vh;
+    }
+
+    /* 小提示框 */
+    .tip {
+        margin-top: 3vh; padding: 2vh 3vw;
+        border-radius: 8px; font-size: 1.3vw;
+        background: rgba(128,128,128,0.1);
+        max-width: 70%;
+    }
+</style>
+</head>
+<body>
+
+<!-- ==================== 第1页：封面 ==================== -->
+<div class="slide">
+    <div class="cover-title">HTML 演示放映器</div>
+    <div class="cover-sub">用 HTML 做 PPT，自由设计，一键播放</div>
+    <div class="cover-sub" style="margin-top:4vh; font-size:1.3vw; opacity:0.5;">
+        按 → 或 Space 翻页 &nbsp;&bull;&nbsp; F11 全屏 &nbsp;&bull;&nbsp; Esc 退出
+    </div>
+</div>
+
+<!-- ==================== 第2页：功能概览 ==================== -->
+<div class="slide">
+    <h2>功能概览</h2>
+    <div class="cards">
+        <div class="card">
+            <div class="card-icon">🎨</div>
+            <div class="card-title">5 套模板</div>
+            <div class="card-desc">一键切换风格</div>
+        </div>
+        <div class="card">
+            <div class="card-icon">📐</div>
+            <div class="card-title">自适应缩放</div>
+            <div class="card-desc">窗口大小变化文字自动适配</div>
+        </div>
+        <div class="card">
+            <div class="card-icon">🖼️</div>
+            <div class="card-title">图片支持</div>
+            <div class="card-desc">相对路径直接引用</div>
+        </div>
+        <div class="card">
+            <div class="card-icon">⌨️</div>
+            <div class="card-title">快捷键</div>
+            <div class="card-desc">键盘翻页 / 全屏 / 跳转</div>
+        </div>
+    </div>
+</div>
+
+<!-- ==================== 第3页：操作方式 ==================== -->
+<div class="slide">
+    <h2>快捷键一览</h2>
+    <table class="keys">
+        <tr><td>→  Space  Enter</td><td>下一页</td></tr>
+        <tr><td>←  Backspace</td><td>上一页</td></tr>
+        <tr><td>Home</td><td>第一页</td></tr>
+        <tr><td>End</td><td>最后一页</td></tr>
+        <tr><td>F11</td><td>全屏 / 退出全屏</td></tr>
+        <tr><td>Esc</td><td>退出全屏</td></tr>
+    </table>
+    <div class="tip">
+        顶部工具栏可切换模板风格、打开其他文件
+    </div>
+</div>
+
+<!-- ==================== 第4页：模板系统 ==================== -->
+<div class="slide">
+    <h2>内置模板</h2>
+    <div class="cards">
+        <div class="card">
+            <div class="card-title">简约白底</div>
+            <div class="card-desc">课堂汇报、学术答辩</div>
+        </div>
+        <div class="card">
+            <div class="card-title">深色科技</div>
+            <div class="card-desc">技术分享、编程演示</div>
+        </div>
+        <div class="card">
+            <div class="card-title">渐变多彩</div>
+            <div class="card-desc">毕业答辩、产品发布</div>
+        </div>
+        <div class="card">
+            <div class="card-title">商务蓝</div>
+            <div class="card-desc">工作汇报、商务演示</div>
+        </div>
+        <div class="card">
+            <div class="card-title">水墨风</div>
+            <div class="card-desc">文化类、文学类主题</div>
+        </div>
+    </div>
+    <div class="tip">
+        在顶部下拉菜单中选择即可切换，试试看！
+    </div>
+</div>
+
+<!-- ==================== 第5页：格式规范 ==================== -->
+<div class="slide two-col">
+    <div class="col">
+        <h2>格式规范</h2>
+        <p>唯一规则：用 <code>&lt;div class="slide"&gt;</code> 包裹每一页。</p>
+        <ul>
+            <li>class 必须以 slide 开头</li>
+            <li>内部内容完全自由设计</li>
+            <li>不写样式也能用模板美化</li>
+            <li>支持任意 HTML/CSS/JS</li>
+        </ul>
+    </div>
+    <div class="col-demo">
+        <pre><code>&lt;div class="slide"&gt;
+  &lt;h1&gt;第一页&lt;/h1&gt;
+  &lt;p&gt;内容&lt;/p&gt;
+&lt;/div&gt;
+
+&lt;div class="slide"&gt;
+  &lt;h2&gt;第二页&lt;/h2&gt;
+  &lt;ul&gt;
+    &lt;li&gt;要点&lt;/li&gt;
+  &lt;/ul&gt;
+&lt;/div&gt;</code></pre>
+    </div>
+</div>
+
+<!-- ==================== 第6页：布局示例 ==================== -->
+<div class="slide">
+    <h2>支持的布局方式</h2>
+    <div class="cards">
+        <div class="card">
+            <div class="card-title">居中排列</div>
+            <div class="card-desc">默认 flex 居中</div>
+        </div>
+        <div class="card">
+            <div class="card-title">两栏布局</div>
+            <div class="card-desc">flex-direction: row</div>
+        </div>
+        <div class="card">
+            <div class="card-title">数据卡片</div>
+            <div class="card-desc">flex + gap 网格</div>
+        </div>
+        <div class="card">
+            <div class="card-title">代码块</div>
+            <div class="card-desc">pre + code 标签</div>
+        </div>
+    </div>
+</div>
+
+<!-- ==================== 第7页：图片使用 ==================== -->
+<div class="slide two-col">
+    <div class="col">
+        <h2>使用图片</h2>
+        <p>把图片放在 .slidehtml 文件旁边，用相对路径引用：</p>
+        <pre style="margin-top:2vh;"><code>&lt;img src="images/photo.png"&gt;</code></pre>
+        <ul>
+            <li>支持 jpg / png / gif / svg</li>
+            <li>建议放在 images/ 文件夹</li>
+            <li>路径相对于 .slidehtml 文件</li>
+        </ul>
+    </div>
+    <div class="col-demo">
+        <!-- 占位图，替换为你的图片 -->
+        <div style="width:28vw; height:28vh; border-radius:12px; display:flex; align-items:center; justify-content:center; background:rgba(128,128,128,0.1); font-size:1.4vw; opacity:0.5; border:2px dashed rgba(128,128,128,0.3);">
+            替换为 &lt;img src="..."&gt;
+        </div>
+    </div>
+</div>
+
+<!-- ==================== 第8页：进阶写法 ==================== -->
+<div class="slide two-col">
+    <div class="col">
+        <h2>进阶用法</h2>
+        <ul>
+            <li>用 vw 单位让文字自适应缩放</li>
+            <li>每页可设不同背景色/渐变</li>
+            <li>支持 CSS 动画效果</li>
+            <li>可引入外部字体和图标库</li>
+            <li>支持嵌入视频 video 标签</li>
+        </ul>
+    </div>
+    <div class="col-demo">
+        <pre><code>&lt;style&gt;
+  .slide h1 {
+    font-size: 5vw;
+  }
+  .slide p {
+    font-size: 2vw;
+  }
+  .cover {
+    background: linear-gradient(
+      135deg, #667eea, #764ba2
+    );
+    color: #fff;
+  }
+&lt;/style&gt;</code></pre>
+    </div>
+</div>
+
+<!-- ==================== 第9页：代码展示 ==================== -->
+<div class="slide">
+    <h2>代码块效果</h2>
+    <pre><code>import webview
+
+def main():
+    window = webview.create_window(
+        title='我的演示',
+        html='&lt;h1&gt;Hello&lt;/h1&gt;'
+    )
+    webview.start()
+
+if __name__ == '__main__':
+    main()</code></pre>
+</div>
+
+<!-- ==================== 第10页：数据展示 ==================== -->
+<div class="slide">
+    <h2>数据展示示例</h2>
+    <div class="cards">
+        <div class="card">
+            <div style="font-size:3.5vw; font-weight:700;">5</div>
+            <div class="card-desc">内置模板</div>
+        </div>
+        <div class="card">
+            <div style="font-size:3.5vw; font-weight:700;">6+</div>
+            <div class="card-desc">翻页快捷键</div>
+        </div>
+        <div class="card">
+            <div style="font-size:3.5vw; font-weight:700;">vw</div>
+            <div class="card-desc">自适应单位</div>
+        </div>
+        <div class="card">
+            <div style="font-size:3.5vw; font-weight:700;">&infin;</div>
+            <div class="card-desc">自由设计</div>
+        </div>
+    </div>
+</div>
+
+<!-- ==================== 第11页：结尾 ==================== -->
+<div class="slide">
+    <div class="cover-title">开始创作吧！</div>
+    <div class="cover-sub">新建 .slidehtml 文件，写入你的内容</div>
+    <div class="cover-sub" style="margin-top:2vh; font-size:1.4vw; opacity:0.6;">
+        详细文档请查看 使用指南.md 和 AGENT.md
+    </div>
+</div>
+
+</body>
+</html>

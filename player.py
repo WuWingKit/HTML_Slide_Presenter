@@ -546,15 +546,22 @@ html, body {
     height: 100%;
     overflow: hidden;
 }
-.slide-container .slide.active {
-    display: block;
+/* Display controlled by JS inline style + user/template CSS — viewer does not force display */
+/* Template mode: flex centering so content is vertically/horizontally centered */
+.presenter-tpl .slide.active {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 6vh 8vw;
+    text-align: center;
 }
-/* Template mode: viewer provides responsive font sizes via clamp() */
-.presenter-tpl .slide h1 { font-size: clamp(28px, 4.5vw, 72px); }
-.presenter-tpl .slide h2 { font-size: clamp(22px, 3.2vw, 52px); }
-.presenter-tpl .slide h3 { font-size: clamp(18px, 2.5vw, 40px); }
+/* Template mode: responsive font sizes via clamp() */
+.presenter-tpl .slide h1 { font-size: clamp(36px, 5vw, 80px); }
+.presenter-tpl .slide h2 { font-size: clamp(28px, 3.8vw, 60px); }
+.presenter-tpl .slide h3 { font-size: clamp(22px, 2.8vw, 44px); }
 .presenter-tpl .slide p,
-.presenter-tpl .slide li { font-size: clamp(14px, 1.8vw, 28px); }
+.presenter-tpl .slide li { font-size: clamp(15px, 2vw, 30px); }
 .presenter-tpl .slide ul, .presenter-tpl .slide ol {
     text-align: left;
     max-width: 85%;

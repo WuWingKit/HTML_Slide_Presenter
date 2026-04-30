@@ -79,10 +79,10 @@ HTML 文件中每一页幻灯片必须使用 `<div class="slide">` 包裹：
 放映器通过 `clamp()` 函数提供响应式字体大小，模板只需覆盖视觉样式（颜色、背景等）。
 
 模板字体大小参考（clamp 值）：
-- `h1`: `clamp(28px, 4.5vw, 72px)`
-- `h2`: `clamp(22px, 3.2vw, 52px)`
-- `h3`: `clamp(18px, 2.5vw, 40px)`
-- `p/li`: `clamp(14px, 1.8vw, 28px)`
+- `h1`: `clamp(36px, 5vw, 80px)`
+- `h2`: `clamp(28px, 3.8vw, 60px)`
+- `h3`: `clamp(22px, 2.8vw, 44px)`
+- `p/li`: `clamp(15px, 2vw, 30px)`
 
 ### 2.3 显隐机制
 

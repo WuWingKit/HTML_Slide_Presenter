@@ -2,16 +2,19 @@
 <html>
 <head>
 <meta charset="UTF-8">
+<meta name="ratio" content="16:9">
 <title>HTML 演示放映器 - 功能演示</title>
 <style>
     /* 基础布局 */
     .slide {
-        width: 100vw; height: 100vh;
+        width: 100%; height: 100%;
         display: flex; flex-direction: column;
         justify-content: center; align-items: center;
         text-align: center;
         padding: 8vh 10vw;
         box-sizing: border-box;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
     }
 
     /* 间距 */
@@ -95,7 +98,7 @@
     <div class="cards">
         <div class="card">
             <div class="card-icon">🎨</div>
-            <div class="card-title">5 套模板</div>
+            <div class="card-title">6 套模板</div>
             <div class="card-desc">一键切换风格</div>
         </div>
         <div class="card">
@@ -155,6 +158,10 @@
         <div class="card">
             <div class="card-title">水墨风</div>
             <div class="card-desc">文化类、文学类主题</div>
+        </div>
+        <div class="card">
+            <div class="card-title">Nord 冷调</div>
+            <div class="card-desc">技术文档、北欧风格</div>
         </div>
     </div>
     <div class="tip">
@@ -283,7 +290,7 @@ if __name__ == '__main__':
     <h2>数据展示示例</h2>
     <div class="cards">
         <div class="card">
-            <div style="font-size:3.5vw; font-weight:700;">5</div>
+            <div style="font-size:3.5vw; font-weight:700;">6</div>
             <div class="card-desc">内置模板</div>
         </div>
         <div class="card">
@@ -306,7 +313,7 @@ if __name__ == '__main__':
     <div class="cover-title">开始创作吧！</div>
     <div class="cover-sub">新建 .slidehtml 文件，写入你的内容</div>
     <div class="cover-sub" style="margin-top:2vh; font-size:1.4vw; opacity:0.6;">
-        详细文档请查看 使用指南.md 和 AGENT.md
+        详细文档请查看 USER_GUIDE.md 和 AGENT.md
     </div>
 </div>
 

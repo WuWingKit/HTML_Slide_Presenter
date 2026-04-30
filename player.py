@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-HTML 演示放映器 (HTML Slide Presenter)
-用法：
-  双击 .slidehtml 文件（需先运行 register_file_assoc.bat）
-  或：python player.py [文件路径]
-  或：直接运行，然后点击"打开文件"选择
+HTML Slide Presenter
+Usage:
+  Double-click .slidehtml file (run register_file_assoc.bat first)
+  or: python player.py [file_path]
+  or: run directly, then click "Open File"
 """
 
 import sys
@@ -14,7 +14,7 @@ import json
 import logging
 import webview
 
-# ==================== 日志 ====================
+# ==================== Logging ====================
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s [%(levelname)s] %(message)s',
@@ -22,404 +22,453 @@ logging.basicConfig(
 )
 logger = logging.getLogger('HTMLPresenter')
 
-# ==================== 常量 ====================
-APP_TITLE = 'HTML 演示放映器'
+# ==================== Constants ====================
+APP_TITLE = 'HTML Slide Presenter'
 WINDOW_WIDTH = 1280
 WINDOW_HEIGHT = 800
 MIN_WIDTH = 960
 MIN_HEIGHT = 600
 
-# ==================== 预设模板 CSS ====================
+# ==================== Template CSS ====================
 TEMPLATES = {
     'none': {
-        'name': '不使用模板（文件自带样式）',
+        'name': 'Custom Styles',
         'css': ''
     },
     'white': {
-        'name': '简约白底',
+        'name': 'Clean White',
         'css': r'''
-/* 简约白底模板 */
+/* Clean White Template */
 .presenter-tpl .slide {
-    background: #ffffff !important;
-    color: #2c3e50 !important;
-    font-family: "Microsoft YaHei", "PingFang SC", "Helvetica Neue", sans-serif !important;
-    padding: 8vh 10vw !important;
-    width: 100vw !important;
-    height: 100vh !important;
-    text-align: center !important;
-    box-sizing: border-box !important;
-}
-.presenter-tpl .slide.active {
-    display: flex !important;
-    flex-direction: column !important;
-    justify-content: center !important;
-    align-items: center !important;
+    background: #ffffff;
+    color: #1a1a2e;
+    font-family: "Microsoft YaHei", "PingFang SC", "Helvetica Neue", Arial, sans-serif;
 }
 .presenter-tpl .slide h1,
 .presenter-tpl .slide h2,
 .presenter-tpl .slide h3 {
-    color: #2c3e50 !important;
-    margin-bottom: 0.6em !important;
-    font-weight: 700 !important;
+    color: #1a1a2e;
+    font-weight: 700;
+    letter-spacing: -0.02em;
 }
-.presenter-tpl .slide h1 { font-size: 5vw !important; }
-.presenter-tpl .slide h2 { font-size: 3.5vw !important; }
-.presenter-tpl .slide h3 { font-size: 2.8vw !important; }
 .presenter-tpl .slide p,
 .presenter-tpl .slide li {
-    font-size: 2vw !important;
-    line-height: 1.8 !important;
-    color: #555 !important;
+    color: #444;
+    line-height: 1.8;
 }
-.presenter-tpl .slide ul, .presenter-tpl .slide ol {
-    text-align: left !important;
-    max-width: 80% !important;
-}
+.presenter-tpl .slide a { color: #2563eb; }
 .presenter-tpl .slide code {
-    background: #f0f0f0 !important;
-    padding: 0.2em 0.6em !important;
-    border-radius: 4px !important;
-    font-size: 1.8vw !important;
+    background: #f1f5f9;
+    color: #334155;
+    padding: 0.15em 0.5em;
+    border-radius: 4px;
+    font-size: 0.9em;
 }
 .presenter-tpl .slide pre {
-    background: #f8f8f8 !important;
-    padding: 2vh 3vw !important;
-    border-radius: 8px !important;
-    border-left: 4px solid #3498db !important;
-    text-align: left !important;
-    max-width: 85% !important;
-    overflow-x: auto !important;
+    background: #f8fafc;
+    border-left: 3px solid #2563eb;
+    border-radius: 8px;
+    padding: 1.5em;
+    text-align: left;
+    overflow-x: auto;
 }
 .presenter-tpl .slide pre code {
-    background: none !important;
-    font-size: 1.6vw !important;
-    line-height: 1.6 !important;
+    background: none;
+    color: #334155;
+    padding: 0;
 }
 .presenter-tpl .slide img {
-    max-width: 80% !important;
-    max-height: 60vh !important;
-    border-radius: 8px !important;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.1) !important;
+    border-radius: 8px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+}
+.presenter-tpl .slide blockquote {
+    border-left: 3px solid #cbd5e1;
+    color: #64748b;
+    font-style: italic;
+}
+.presenter-tpl .slide table { border-collapse: collapse; }
+.presenter-tpl .slide th {
+    background: #f1f5f9;
+    color: #1e293b;
+    font-weight: 600;
+}
+.presenter-tpl .slide td {
+    border-bottom: 1px solid #e2e8f0;
 }
 '''
     },
     'dark': {
-        'name': '深色科技',
+        'name': 'Dark Tech',
         'css': r'''
-/* 深色科技模板 */
+/* Dark Tech Template */
 .presenter-tpl .slide {
-    background: linear-gradient(135deg, #0c0c1d 0%, #1a1a3e 50%, #0c0c1d 100%) !important;
-    color: #e0e0e0 !important;
-    font-family: "Consolas", "Microsoft YaHei", "Courier New", monospace !important;
-    padding: 8vh 10vw !important;
-    width: 100vw !important;
-    height: 100vh !important;
-    text-align: center !important;
-    box-sizing: border-box !important;
-    position: relative !important;
-}
-.presenter-tpl .slide.active {
-    display: flex !important;
-    flex-direction: column !important;
-    justify-content: center !important;
-    align-items: center !important;
+    background: linear-gradient(160deg, #0a0a1a 0%, #12122a 40%, #0d1b2a 100%);
+    color: #c8d6e5;
+    font-family: "SF Mono", "Consolas", "Microsoft YaHei", "Courier New", monospace;
+    position: relative;
 }
 .presenter-tpl .slide::before {
-    content: '' !important;
-    position: absolute !important;
-    inset: 0 !important;
-    background-image: radial-gradient(circle, rgba(255,255,255,0.03) 1px, transparent 1px) !important;
-    background-size: 3vw 3vw !important;
-    pointer-events: none !important;
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+        radial-gradient(circle at 20% 30%, rgba(0,210,255,0.03) 0%, transparent 50%),
+        radial-gradient(circle at 80% 70%, rgba(100,100,255,0.03) 0%, transparent 50%),
+        radial-gradient(circle, rgba(255,255,255,0.015) 1px, transparent 1px);
+    background-size: 100% 100%, 100% 100%, 24px 24px;
+    pointer-events: none;
 }
 .presenter-tpl .slide h1,
 .presenter-tpl .slide h2,
 .presenter-tpl .slide h3 {
-    background: linear-gradient(90deg, #00d2ff, #3a7bd5) !important;
-    -webkit-background-clip: text !important;
-    -webkit-text-fill-color: transparent !important;
-    background-clip: text !important;
-    margin-bottom: 0.6em !important;
-    font-weight: 700 !important;
+    background: linear-gradient(135deg, #00d2ff 0%, #7b68ee 50%, #a855f7 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-weight: 700;
 }
-.presenter-tpl .slide h1 { font-size: 5vw !important; }
-.presenter-tpl .slide h2 { font-size: 3.5vw !important; }
-.presenter-tpl .slide h3 { font-size: 2.8vw !important; }
 .presenter-tpl .slide p,
 .presenter-tpl .slide li {
-    font-size: 2vw !important;
-    line-height: 1.8 !important;
-    color: #b0b0b0 !important;
+    color: #94a3b8;
+    line-height: 1.8;
 }
-.presenter-tpl .slide ul, .presenter-tpl .slide ol {
-    text-align: left !important;
-    max-width: 80% !important;
+.presenter-tpl .slide a {
+    color: #38bdf8;
+    text-decoration: underline;
+    text-underline-offset: 2px;
 }
-.presenter-tpl .slide li::marker { color: #00d2ff !important; }
+.presenter-tpl .slide li::marker { color: #00d2ff; }
 .presenter-tpl .slide code {
-    background: rgba(255,255,255,0.08) !important;
-    padding: 0.2em 0.6em !important;
-    border-radius: 4px !important;
-    color: #4fc3f7 !important;
-    font-size: 1.8vw !important;
+    background: rgba(0,210,255,0.08);
+    color: #38bdf8;
+    padding: 0.15em 0.5em;
+    border-radius: 4px;
+    font-size: 0.9em;
 }
 .presenter-tpl .slide pre {
-    background: rgba(0,0,0,0.4) !important;
-    padding: 2vh 3vw !important;
-    border-radius: 8px !important;
-    border-left: 4px solid #00d2ff !important;
-    text-align: left !important;
-    max-width: 85% !important;
-    overflow-x: auto !important;
+    background: rgba(0,0,0,0.5);
+    border: 1px solid rgba(0,210,255,0.12);
+    border-left: 3px solid #00d2ff;
+    border-radius: 8px;
+    padding: 1.5em;
+    text-align: left;
+    overflow-x: auto;
 }
 .presenter-tpl .slide pre code {
-    background: none !important;
-    color: #e0e0e0 !important;
-    font-size: 1.6vw !important;
-    line-height: 1.6 !important;
+    background: none;
+    color: #e2e8f0;
+    padding: 0;
 }
 .presenter-tpl .slide img {
-    max-width: 80% !important;
-    max-height: 60vh !important;
-    border-radius: 12px !important;
-    box-shadow: 0 0 30px rgba(0,210,255,0.2) !important;
+    border-radius: 12px;
+    box-shadow: 0 0 40px rgba(0,210,255,0.1), 0 8px 32px rgba(0,0,0,0.3);
+}
+.presenter-tpl .slide blockquote {
+    border-left: 3px solid rgba(0,210,255,0.3);
+    color: #64748b;
+    font-style: italic;
+}
+.presenter-tpl .slide table { border-collapse: collapse; }
+.presenter-tpl .slide th {
+    background: rgba(0,210,255,0.08);
+    color: #00d2ff;
+    font-weight: 600;
+}
+.presenter-tpl .slide td {
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    color: #94a3b8;
 }
 '''
     },
     'gradient': {
-        'name': '渐变多彩',
+        'name': 'Gradient',
         'css': r'''
-/* 渐变多彩模板 - 每页不同渐变 */
+/* Gradient Template - different gradient per page */
 .presenter-tpl .slide {
-    color: #fff !important;
-    font-family: "Microsoft YaHei", "PingFang SC", sans-serif !important;
-    padding: 8vh 10vw !important;
-    width: 100vw !important;
-    height: 100vh !important;
-    text-align: center !important;
-    box-sizing: border-box !important;
+    color: #ffffff;
+    font-family: "Microsoft YaHei", "PingFang SC", "Segoe UI", sans-serif;
 }
-.presenter-tpl .slide.active {
-    display: flex !important;
-    flex-direction: column !important;
-    justify-content: center !important;
-    align-items: center !important;
-}
-.presenter-tpl .slide:nth-child(6n+1) { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important; }
-.presenter-tpl .slide:nth-child(6n+2) { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%) !important; }
-.presenter-tpl .slide:nth-child(6n+3) { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%) !important; }
-.presenter-tpl .slide:nth-child(6n+4) { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%) !important; }
-.presenter-tpl .slide:nth-child(6n+5) { background: linear-gradient(135deg, #fa709a 0%, #fee140 100%) !important; }
-.presenter-tpl .slide:nth-child(6n+6) { background: linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%) !important; }
+.presenter-tpl .slide:nth-child(6n+1) { background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%); }
+.presenter-tpl .slide:nth-child(6n+2) { background: linear-gradient(135deg, #ec4899 0%, #f43f5e 50%, #fb7185 100%); }
+.presenter-tpl .slide:nth-child(6n+3) { background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 50%, #22d3ee 100%); }
+.presenter-tpl .slide:nth-child(6n+4) { background: linear-gradient(135deg, #10b981 0%, #34d399 50%, #6ee7b7 100%); }
+.presenter-tpl .slide:nth-child(6n+5) { background: linear-gradient(135deg, #f59e0b 0%, #f97316 50%, #fb923c 100%); }
+.presenter-tpl .slide:nth-child(6n+6) { background: linear-gradient(135deg, #8b5cf6 0%, #a78bfa 50%, #c4b5fd 100%); }
 .presenter-tpl .slide h1,
 .presenter-tpl .slide h2,
 .presenter-tpl .slide h3 {
-    text-shadow: 2px 2px 10px rgba(0,0,0,0.2) !important;
-    margin-bottom: 0.6em !important;
-    font-weight: 700 !important;
+    text-shadow: 0 2px 12px rgba(0,0,0,0.15);
+    font-weight: 700;
 }
-.presenter-tpl .slide h1 { font-size: 5vw !important; }
-.presenter-tpl .slide h2 { font-size: 3.5vw !important; }
-.presenter-tpl .slide h3 { font-size: 2.8vw !important; }
 .presenter-tpl .slide p,
 .presenter-tpl .slide li {
-    font-size: 2vw !important;
-    line-height: 1.8 !important;
-    opacity: 0.95 !important;
+    color: rgba(255,255,255,0.92);
+    line-height: 1.8;
 }
-.presenter-tpl .slide ul, .presenter-tpl .slide ol {
-    text-align: left !important;
-    max-width: 80% !important;
+.presenter-tpl .slide a {
+    color: #fff;
+    text-decoration: underline;
+    text-underline-offset: 2px;
 }
 .presenter-tpl .slide code {
-    background: rgba(0,0,0,0.25) !important;
-    padding: 0.2em 0.6em !important;
-    border-radius: 4px !important;
-    font-size: 1.8vw !important;
+    background: rgba(0,0,0,0.2);
+    color: rgba(255,255,255,0.95);
+    padding: 0.15em 0.5em;
+    border-radius: 4px;
+    font-size: 0.9em;
 }
 .presenter-tpl .slide pre {
-    background: rgba(0,0,0,0.35) !important;
-    padding: 2vh 3vw !important;
-    border-radius: 8px !important;
-    border-left: 4px solid rgba(255,255,255,0.4) !important;
-    text-align: left !important;
-    max-width: 85% !important;
-    overflow-x: auto !important;
+    background: rgba(0,0,0,0.3);
+    border-left: 3px solid rgba(255,255,255,0.4);
+    border-radius: 8px;
+    padding: 1.5em;
+    text-align: left;
+    overflow-x: auto;
 }
 .presenter-tpl .slide pre code {
-    background: none !important;
-    color: #fff !important;
-    font-size: 1.6vw !important;
-    line-height: 1.6 !important;
+    background: none;
+    color: #fff;
+    padding: 0;
 }
 .presenter-tpl .slide img {
-    max-width: 80% !important;
-    max-height: 60vh !important;
-    border-radius: 12px !important;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.2) !important;
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+}
+.presenter-tpl .slide blockquote {
+    border-left: 3px solid rgba(255,255,255,0.4);
+    color: rgba(255,255,255,0.75);
+    font-style: italic;
+}
+.presenter-tpl .slide table { border-collapse: collapse; }
+.presenter-tpl .slide th {
+    background: rgba(0,0,0,0.15);
+    font-weight: 600;
+}
+.presenter-tpl .slide td {
+    border-bottom: 1px solid rgba(255,255,255,0.1);
 }
 '''
     },
     'business': {
-        'name': '商务蓝',
+        'name': 'Business Blue',
         'css': r'''
-/* 商务蓝模板 */
+/* Business Blue Template */
 .presenter-tpl .slide {
-    background: #f5f7fa !important;
-    color: #2c3e50 !important;
-    font-family: "Microsoft YaHei", "PingFang SC", sans-serif !important;
-    padding: 8vh 10vw !important;
-    width: 100vw !important;
-    height: 100vh !important;
-    text-align: center !important;
-    box-sizing: border-box !important;
-    position: relative !important;
-}
-.presenter-tpl .slide.active {
-    display: flex !important;
-    flex-direction: column !important;
-    justify-content: center !important;
-    align-items: center !important;
+    background: #f8fafc;
+    color: #1e293b;
+    font-family: "Microsoft YaHei", "PingFang SC", "Segoe UI", sans-serif;
+    position: relative;
 }
 .presenter-tpl .slide::before {
-    content: '' !important;
-    position: absolute !important;
-    top: 0; left: 0; right: 0 !important;
-    height: 6px !important;
-    background: linear-gradient(90deg, #2196F3, #1565C0) !important;
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #2563eb, #3b82f6, #60a5fa);
+}
+.presenter-tpl .slide::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 1px;
+    background: #e2e8f0;
 }
 .presenter-tpl .slide h1,
 .presenter-tpl .slide h2,
 .presenter-tpl .slide h3 {
-    color: #1565C0 !important;
-    margin-bottom: 0.6em !important;
-    font-weight: 700 !important;
+    color: #1e3a5f;
+    font-weight: 700;
 }
-.presenter-tpl .slide h1 { font-size: 5vw !important; }
-.presenter-tpl .slide h2 { font-size: 3.5vw !important; }
-.presenter-tpl .slide h3 { font-size: 2.8vw !important; }
 .presenter-tpl .slide p,
 .presenter-tpl .slide li {
-    font-size: 2vw !important;
-    line-height: 1.8 !important;
-    color: #555 !important;
+    color: #475569;
+    line-height: 1.8;
 }
-.presenter-tpl .slide ul, .presenter-tpl .slide ol {
-    text-align: left !important;
-    max-width: 80% !important;
-}
+.presenter-tpl .slide a { color: #2563eb; }
 .presenter-tpl .slide code {
-    background: #e3f2fd !important;
-    padding: 0.2em 0.6em !important;
-    border-radius: 4px !important;
-    color: #1565C0 !important;
-    font-size: 1.8vw !important;
+    background: #eff6ff;
+    color: #1d4ed8;
+    padding: 0.15em 0.5em;
+    border-radius: 4px;
+    font-size: 0.9em;
 }
 .presenter-tpl .slide pre {
-    background: #fff !important;
-    padding: 2vh 3vw !important;
-    border-radius: 8px !important;
-    border-left: 4px solid #2196F3 !important;
-    text-align: left !important;
-    max-width: 85% !important;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.05) !important;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-left: 3px solid #2563eb;
+    border-radius: 8px;
+    padding: 1.5em;
+    text-align: left;
+    overflow-x: auto;
 }
 .presenter-tpl .slide pre code {
-    background: none !important;
-    color: #333 !important;
-    font-size: 1.6vw !important;
+    background: none;
+    color: #334155;
+    padding: 0;
 }
 .presenter-tpl .slide img {
-    max-width: 80% !important;
-    max-height: 60vh !important;
-    border-radius: 8px !important;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.1) !important;
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+}
+.presenter-tpl .slide blockquote {
+    border-left: 3px solid #93c5fd;
+    color: #64748b;
+    font-style: italic;
+    background: #f0f9ff;
+    padding: 0.5em 1em;
+    border-radius: 0 8px 8px 0;
+}
+.presenter-tpl .slide table { border-collapse: collapse; }
+.presenter-tpl .slide th {
+    background: #1e3a5f;
+    color: #fff;
+    font-weight: 600;
+}
+.presenter-tpl .slide td {
+    border-bottom: 1px solid #e2e8f0;
 }
 '''
     },
     'ink': {
-        'name': '水墨风',
+        'name': 'Ink Style',
         'css': r'''
-/* 水墨风模板 */
+/* Ink Style Template */
 .presenter-tpl .slide {
-    background: #faf8f5 !important;
-    color: #333 !important;
-    font-family: "KaiTi", "STKaiti", "Microsoft YaHei", serif !important;
-    padding: 8vh 10vw !important;
-    width: 100vw !important;
-    height: 100vh !important;
-    text-align: center !important;
-    box-sizing: border-box !important;
-    position: relative !important;
-}
-.presenter-tpl .slide.active {
-    display: flex !important;
-    flex-direction: column !important;
-    justify-content: center !important;
-    align-items: center !important;
+    background: #faf8f5;
+    color: #2c2c2c;
+    font-family: "KaiTi", "STKaiti", "Noto Serif SC", "Microsoft YaHei", serif;
+    position: relative;
 }
 .presenter-tpl .slide::before {
-    content: '' !important;
-    position: absolute !important;
-    inset: 3vh 3vw !important;
-    border: 1px solid rgba(0,0,0,0.08) !important;
-    pointer-events: none !important;
+    content: '';
+    position: absolute;
+    inset: 2.5vh 2.5vw;
+    border: 1px solid rgba(0,0,0,0.06);
+    pointer-events: none;
 }
 .presenter-tpl .slide h1,
 .presenter-tpl .slide h2,
 .presenter-tpl .slide h3 {
-    color: #222 !important;
-    margin-bottom: 0.6em !important;
-    font-weight: 400 !important;
-    letter-spacing: 0.1em !important;
+    color: #1a1a1a;
+    font-weight: 400;
+    letter-spacing: 0.15em;
 }
-.presenter-tpl .slide h1 { font-size: 5vw !important; }
-.presenter-tpl .slide h2 { font-size: 3.5vw !important; }
-.presenter-tpl .slide h3 { font-size: 2.8vw !important; }
 .presenter-tpl .slide p,
 .presenter-tpl .slide li {
-    font-size: 2vw !important;
-    line-height: 2 !important;
-    color: #555 !important;
+    color: #555;
+    line-height: 2;
+    letter-spacing: 0.05em;
 }
-.presenter-tpl .slide ul, .presenter-tpl .slide ol {
-    text-align: left !important;
-    max-width: 80% !important;
+.presenter-tpl .slide a {
+    color: #555;
+    text-decoration: underline;
+    text-underline-offset: 3px;
 }
 .presenter-tpl .slide code {
-    background: rgba(0,0,0,0.06) !important;
-    padding: 0.2em 0.6em !important;
-    border-radius: 4px !important;
-    font-size: 1.8vw !important;
-    color: #333 !important;
+    background: rgba(0,0,0,0.04);
+    color: #444;
+    padding: 0.15em 0.5em;
+    border-radius: 3px;
+    font-size: 0.9em;
 }
 .presenter-tpl .slide pre {
-    background: #fff !important;
-    padding: 2vh 3vw !important;
-    border-radius: 8px !important;
-    border-left: 4px solid #999 !important;
-    text-align: left !important;
-    max-width: 85% !important;
-    overflow-x: auto !important;
+    background: #fff;
+    border-left: 2px solid #999;
+    border-radius: 4px;
+    padding: 1.5em;
+    text-align: left;
+    overflow-x: auto;
 }
 .presenter-tpl .slide pre code {
-    background: none !important;
-    color: #333 !important;
-    font-size: 1.6vw !important;
-    line-height: 1.6 !important;
+    background: none;
+    color: #333;
+    padding: 0;
 }
 .presenter-tpl .slide img {
-    max-width: 70% !important;
-    max-height: 55vh !important;
-    border-radius: 4px !important;
-    filter: grayscale(20%) !important;
+    border-radius: 2px;
+    filter: grayscale(15%) contrast(0.95);
+}
+.presenter-tpl .slide blockquote {
+    border-left: 2px solid #bbb;
+    color: #777;
+    font-style: italic;
+}
+.presenter-tpl .slide table { border-collapse: collapse; }
+.presenter-tpl .slide th {
+    background: rgba(0,0,0,0.04);
+    font-weight: 600;
+    color: #333;
+}
+.presenter-tpl .slide td {
+    border-bottom: 1px solid rgba(0,0,0,0.06);
+}
+'''
+    },
+    'nord': {
+        'name': 'Nord Cool',
+        'css': r'''
+/* Nord Cool Template */
+.presenter-tpl .slide {
+    background: #2e3440;
+    color: #d8dee9;
+    font-family: "Microsoft YaHei", "PingFang SC", "Segoe UI", sans-serif;
+}
+.presenter-tpl .slide h1,
+.presenter-tpl .slide h2,
+.presenter-tpl .slide h3 {
+    color: #88c0d0;
+    font-weight: 700;
+}
+.presenter-tpl .slide p,
+.presenter-tpl .slide li {
+    color: #d8dee9;
+    line-height: 1.8;
+}
+.presenter-tpl .slide a { color: #81a1c1; }
+.presenter-tpl .slide code {
+    background: rgba(136,192,208,0.1);
+    color: #88c0d0;
+    padding: 0.15em 0.5em;
+    border-radius: 4px;
+    font-size: 0.9em;
+}
+.presenter-tpl .slide pre {
+    background: #3b4252;
+    border-left: 3px solid #88c0d0;
+    border-radius: 8px;
+    padding: 1.5em;
+    text-align: left;
+    overflow-x: auto;
+}
+.presenter-tpl .slide pre code {
+    background: none;
+    color: #d8dee9;
+    padding: 0;
+}
+.presenter-tpl .slide img {
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+}
+.presenter-tpl .slide blockquote {
+    border-left: 3px solid #4c566a;
+    color: #81a1c1;
+    font-style: italic;
+}
+.presenter-tpl .slide table { border-collapse: collapse; }
+.presenter-tpl .slide th {
+    background: #3b4252;
+    color: #88c0d0;
+    font-weight: 600;
+}
+.presenter-tpl .slide td {
+    border-bottom: 1px solid #4c566a;
 }
 '''
     }
 }
 
 
-# ==================== HTML/CSS/JS 模板 ====================
+# ==================== HTML/CSS/JS Template ====================
 HTML_TEMPLATE = r'''<!DOCTYPE html>
 <html>
 <head>
@@ -429,112 +478,205 @@ HTML_TEMPLATE = r'''<!DOCTYPE html>
 html, body {
     height: 100%; width: 100%;
     font-family: "Microsoft YaHei", "Segoe UI", sans-serif;
-    background: #1a1a2e; color: #fff;
+    background: #0f0f1a; color: #fff;
     display: flex; flex-direction: column;
     overflow: hidden; user-select: none;
 }
 
-/* ---------- 工具栏 ---------- */
+/* ---------- Toolbar ---------- */
 .toolbar {
-    height: 48px; flex-shrink: 0;
-    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-    border-bottom: 1px solid rgba(255,255,255,0.08);
+    height: 44px; flex-shrink: 0;
+    background: #16162a;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
     display: flex; align-items: center;
-    padding: 0 16px; gap: 12px;
+    padding: 0 14px; gap: 10px;
 }
 .toolbar .title {
-    font-size: 14px; font-weight: 600;
-    color: #e0e0e0;
+    font-size: 13px; font-weight: 600;
+    color: #a0a0b8;
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    max-width: 280px;
+    flex-shrink: 1;
 }
 .toolbar select {
-    background: #0f3460; color: #e0e0e0; border: 1px solid rgba(255,255,255,0.15);
-    padding: 5px 10px; border-radius: 6px; cursor: pointer;
+    background: #1e1e38; color: #c0c0d8; border: 1px solid rgba(255,255,255,0.1);
+    padding: 4px 8px; border-radius: 6px; cursor: pointer;
     font-size: 12px; font-family: inherit; outline: none;
-    max-width: 200px;
+    max-width: 180px;
 }
-.toolbar select:hover { border-color: rgba(255,255,255,0.3); }
+.toolbar select:hover { border-color: rgba(255,255,255,0.2); }
+.toolbar .sep {
+    width: 1px; height: 20px;
+    background: rgba(255,255,255,0.08);
+    flex-shrink: 0;
+}
 .btn {
-    background: #0f3460; color: #e0e0e0; border: none;
-    padding: 6px 16px; border-radius: 6px; cursor: pointer;
+    background: #1e1e38; color: #c0c0d8; border: 1px solid rgba(255,255,255,0.08);
+    padding: 5px 14px; border-radius: 6px; cursor: pointer;
     font-size: 12px; font-family: inherit;
-    transition: background 0.2s;
+    transition: all 0.15s;
     white-space: nowrap;
 }
-.btn:hover { background: #1a5276; }
-.btn:active { background: #0a2d4e; }
+.btn:hover { background: #2a2a50; border-color: rgba(255,255,255,0.15); }
+.btn:active { background: #18183a; }
 
-/* ---------- 幻灯片区域 ---------- */
-.slide-container {
-    flex: 1; position: relative;
-    background: #111; overflow: hidden;
+/* ---------- Slide Viewport ---------- */
+.slide-viewport {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #0a0a14;
+    overflow: hidden;
+    position: relative;
 }
-/* 显隐由 JS 通过 element.style.display + .active 类控制 */
-/* 无模板时，.active 默认 display: flex 确保布局正确 */
-.slide-container .slide.active { display: flex; }
+.slide-container {
+    position: relative;
+    aspect-ratio: 16 / 9;
+    width: 100%;
+    height: 100%;
+    max-width: calc((100vh - 88px) * 16 / 9);
+    overflow: hidden;
+}
+/* Custom HTML mode: slides fill container, layout controlled by user CSS */
+.slide-container .slide {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+.slide-container .slide.active {
+    display: block;
+}
+/* Template mode: viewer provides responsive font sizes via clamp() */
+.presenter-tpl .slide h1 { font-size: clamp(28px, 4.5vw, 72px); }
+.presenter-tpl .slide h2 { font-size: clamp(22px, 3.2vw, 52px); }
+.presenter-tpl .slide h3 { font-size: clamp(18px, 2.5vw, 40px); }
+.presenter-tpl .slide p,
+.presenter-tpl .slide li { font-size: clamp(14px, 1.8vw, 28px); }
+.presenter-tpl .slide ul, .presenter-tpl .slide ol {
+    text-align: left;
+    max-width: 85%;
+}
+.presenter-tpl .slide code { font-size: clamp(13px, 1.5vw, 24px); }
+.presenter-tpl .slide pre code { font-size: clamp(12px, 1.3vw, 20px); }
+.presenter-tpl .slide img {
+    max-width: 80%;
+    max-height: 55vh;
+    object-fit: contain;
+}
+.presenter-tpl .slide blockquote {
+    max-width: 80%;
+    padding: 0.5em 1.2em;
+}
+.presenter-tpl .slide table {
+    max-width: 90%;
+}
+.presenter-tpl .slide th,
+.presenter-tpl .slide td {
+    padding: 0.5em 1em;
+}
 
-/* ---------- 底部导航 ---------- */
+/* ---------- Bottom Nav ---------- */
 .nav-bar {
     height: 44px; flex-shrink: 0;
-    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-    border-top: 1px solid rgba(255,255,255,0.08);
+    background: #16162a;
+    border-top: 1px solid rgba(255,255,255,0.06);
     display: flex; align-items: center; justify-content: center;
-    gap: 12px; padding: 0 20px; position: relative;
+    gap: 10px; padding: 0 16px; position: relative;
 }
 .nav-btn {
-    background: #0f3460; color: #e0e0e0; border: none;
-    width: 32px; height: 32px; border-radius: 50%;
-    font-size: 14px; cursor: pointer;
+    background: #1e1e38; color: #c0c0d8; border: 1px solid rgba(255,255,255,0.08);
+    width: 30px; height: 30px; border-radius: 50%;
+    font-size: 12px; cursor: pointer;
     display: flex; align-items: center; justify-content: center;
-    transition: background 0.2s;
+    transition: all 0.15s;
 }
-.nav-btn:hover { background: #1a5276; }
-.nav-btn:active { background: #0a2d4e; }
+.nav-btn:hover { background: #2a2a50; border-color: rgba(255,255,255,0.15); }
+.nav-btn:active { background: #18183a; }
 .slide-info {
-    font-size: 13px; color: #bdc3c7;
-    min-width: 100px; text-align: center;
+    font-size: 12px; color: #666;
+    min-width: 90px; text-align: center;
 }
 .nav-hint {
-    font-size: 11px; color: #444;
-    position: absolute; right: 16px;
+    font-size: 11px; color: #333;
+    position: absolute; right: 14px;
+}
+/* Progress bar */
+.progress-track {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: rgba(255,255,255,0.03);
+}
+.progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #6366f1, #8b5cf6);
+    transition: width 0.3s ease;
+    width: 0;
 }
 </style>
 </head>
 <body>
 
 <div class="toolbar">
-    <span class="title">HTML 演示放映器</span>
+    <span class="title" id="titleText">HTML Slide Presenter</span>
+    <div class="sep"></div>
     <select id="templateSelect" onchange="applyTemplate(this.value)">
-        <option value="none">不使用模板</option>
-        <option value="white" selected>简约白底</option>
-        <option value="dark">深色科技</option>
-        <option value="gradient">渐变多彩</option>
-        <option value="business">商务蓝</option>
-        <option value="ink">水墨风</option>
+        <option value="none">Custom Styles</option>
+        <option value="white" selected>Clean White</option>
+        <option value="dark">Dark Tech</option>
+        <option value="gradient">Gradient</option>
+        <option value="business">Business Blue</option>
+        <option value="ink">Ink Style</option>
+        <option value="nord">Nord Cool</option>
     </select>
-    <button class="btn" onclick="openFile()">打开文件</button>
+    <button class="btn" onclick="openFile()">Open File</button>
 </div>
 
-<div class="slide-container presenter-tpl" id="slideContainer"></div>
+<div class="slide-viewport">
+    <div class="slide-container presenter-tpl" id="slideContainer"></div>
+</div>
 
 <div class="nav-bar">
-    <button class="nav-btn" onclick="prevSlide()" title="上一页">&#9664;</button>
-    <span class="slide-info" id="slideInfo">第 0 / 0 页</span>
-    <button class="nav-btn" onclick="nextSlide()" title="下一页">&#9654;</button>
-    <span class="nav-hint">&larr; &rarr; 翻页 &nbsp;|&nbsp; F11 全屏</span>
+    <div class="progress-track"><div class="progress-bar" id="progressBar"></div></div>
+    <button class="nav-btn" onclick="prevSlide()" title="Previous">&#9664;</button>
+    <span class="slide-info" id="slideInfo">0 / 0</span>
+    <button class="nav-btn" onclick="nextSlide()" title="Next">&#9654;</button>
+    <span class="nav-hint">&larr; &rarr; Flip &nbsp;|&nbsp; F11 Fullscreen</span>
 </div>
 
 <script>
-// ==================== 状态 ====================
+// ==================== State ====================
 let slides = [];
 let currentIndex = 0;
 let userStyleEls = [];
 let userScriptEls = [];
+let currentRatio = '16:9';
 
-// ==================== 模板系统 ====================
-function applyTemplate(tplKey) {
+// ==================== Ratio System ====================
+function applyRatio(ratio) {
+    currentRatio = ratio;
     const container = document.getElementById('slideContainer');
-    // 通过 Python API 获取模板 CSS
+    if (ratio === 'auto') {
+        container.style.aspectRatio = '';
+        container.style.maxWidth = '100%';
+        container.style.maxHeight = '100%';
+        container.style.width = '100%';
+        container.style.height = '100%';
+    } else {
+        const [w, h] = ratio.split(':').map(Number);
+        container.style.aspectRatio = w + ' / ' + h;
+        container.style.width = '100%';
+        container.style.height = '100%';
+        container.style.maxWidth = 'calc((100vh - 88px) * ' + w + ' / ' + h + ')';
+        container.style.maxHeight = '';
+    }
+}
+
+// ==================== Template System ====================
+function applyTemplate(tplKey) {
     if (window.pywebview && window.pywebview.api) {
         window.pywebview.api.get_template_css(tplKey).then(function(css) {
             injectTemplateCSS(css, tplKey);
@@ -543,11 +685,9 @@ function applyTemplate(tplKey) {
 }
 
 function injectTemplateCSS(css, tplKey) {
-    // 移除旧模板样式
     let oldTpl = document.getElementById('templateStyle');
     if (oldTpl) oldTpl.remove();
 
-    // 添加/移除 presenter-tpl 类
     const container = document.getElementById('slideContainer');
     if (tplKey === 'none') {
         container.classList.remove('presenter-tpl');
@@ -555,7 +695,6 @@ function injectTemplateCSS(css, tplKey) {
         container.classList.add('presenter-tpl');
     }
 
-    // 注入新模板 CSS
     if (css) {
         const style = document.createElement('style');
         style.id = 'templateStyle';
@@ -563,7 +702,7 @@ function injectTemplateCSS(css, tplKey) {
         document.head.appendChild(style);
     }
 
-    // 重新应用显隐状态（内联样式确保不被模板覆盖）
+    // Re-apply visibility
     slides.forEach((el, i) => {
         if (i === currentIndex) {
             el.classList.add('active');
@@ -575,19 +714,37 @@ function injectTemplateCSS(css, tplKey) {
     });
 }
 
-// ==================== 初始化 ====================
+// ==================== Title Auto-fit ====================
+function fitTitle() {
+    const titleEl = document.getElementById('titleText');
+    if (!titleEl) return;
+    titleEl.style.fontSize = '';
+    titleEl.style.maxWidth = '';
+    requestAnimationFrame(() => {
+        if (titleEl.scrollWidth > titleEl.clientWidth + 2) {
+            let size = 13;
+            titleEl.style.fontSize = size + 'px';
+            while (titleEl.scrollWidth > titleEl.clientWidth + 2 && size > 10) {
+                size -= 0.5;
+                titleEl.style.fontSize = size + 'px';
+            }
+        }
+    });
+}
+
+// ==================== Initialize ====================
 function initSlides(data) {
     const container = document.getElementById('slideContainer');
     container.innerHTML = '';
     slides = [];
 
-    // 移除旧的用户样式/脚本
+    // Remove old user styles/scripts
     userStyleEls.forEach(el => el.remove());
     userStyleEls = [];
     userScriptEls.forEach(el => el.remove());
     userScriptEls = [];
 
-    // 设置 <base> 让外部资源的相对路径正确解析
+    // Set <base> for relative paths
     let baseEl = document.getElementById('userBase');
     if (baseEl) baseEl.remove();
     if (data.base_url) {
@@ -598,7 +755,7 @@ function initSlides(data) {
         userStyleEls.push(baseEl);
     }
 
-    // 注入用户的 <head> 样式（style/link）
+    // Inject user <head> styles
     if (data.head) {
         const tempHead = document.createElement('div');
         tempHead.innerHTML = data.head;
@@ -609,13 +766,12 @@ function initSlides(data) {
         });
     }
 
-    // 直接插入用户原始的 <div class="slide ..."> 元素
+    // Insert slides
     data.slides.forEach((html, i) => {
         const div = document.createElement('div');
         div.innerHTML = html;
         const slideEl = div.firstElementChild;
         if (slideEl) {
-            // 用内联 style.display + .active 类控制显隐
             if (i === 0) slideEl.classList.add('active');
             slideEl.style.display = (i === 0) ? '' : 'none';
             container.appendChild(slideEl);
@@ -623,7 +779,7 @@ function initSlides(data) {
         }
     });
 
-    // 注入 body 级 <script>
+    // Inject body-level <script>
     if (data.scripts) {
         data.scripts.forEach(scriptHtml => {
             const temp = document.createElement('div');
@@ -641,16 +797,33 @@ function initSlides(data) {
 
     currentIndex = 0;
     updateInfo();
+    updateProgress();
     updateToolbar(data.title, data.total);
 
-    // 应用当前选择的模板
+    // Apply ratio if specified
+    if (data.ratio) {
+        applyRatio(data.ratio);
+    }
+
+    // Auto-detect: if user HTML has its own styles, switch to custom mode
+    const hasUserStyles = data.head && (
+        data.head.includes('<style') || data.head.includes('stylesheet')
+    );
+    if (hasUserStyles) {
+        document.getElementById('templateSelect').value = 'none';
+        injectTemplateCSS('', 'none');
+    }
+
+    // Apply current template
     const tplKey = document.getElementById('templateSelect').value;
     if (tplKey !== 'none') {
         applyTemplate(tplKey);
     }
+
+    fitTitle();
 }
 
-// ==================== 导航 ====================
+// ==================== Navigation ====================
 function showSlide(index) {
     if (index < 0 || index >= slides.length) return;
     slides[currentIndex].classList.remove('active');
@@ -659,6 +832,7 @@ function showSlide(index) {
     slides[currentIndex].classList.add('active');
     slides[currentIndex].style.display = '';
     updateInfo();
+    updateProgress();
     syncIndex();
 }
 
@@ -672,15 +846,26 @@ function jumpTo(pageNum) {
     if (idx >= 0 && idx < slides.length) showSlide(idx);
 }
 
-// ==================== 更新显示 ====================
+// ==================== Update Display ====================
 function updateInfo() {
     document.getElementById('slideInfo').textContent =
-        '第 ' + (slides.length ? currentIndex + 1 : 0) + ' / ' + slides.length + ' 页';
+        (slides.length ? currentIndex + 1 : 0) + ' / ' + slides.length;
+}
+
+function updateProgress() {
+    const bar = document.getElementById('progressBar');
+    if (slides.length <= 1) {
+        bar.style.width = slides.length ? '100%' : '0';
+    } else {
+        bar.style.width = ((currentIndex / (slides.length - 1)) * 100) + '%';
+    }
 }
 
 function updateToolbar(title, total) {
+    document.getElementById('titleText').textContent = title;
+    fitTitle();
     if (window.pywebview && window.pywebview.api) {
-        window.pywebview.api.set_window_title(title + ' - ' + total + ' 页');
+        window.pywebview.api.set_window_title(title + ' - ' + total + ' slides');
     }
 }
 
@@ -690,7 +875,7 @@ function syncIndex() {
     }
 }
 
-// ==================== 打开文件 ====================
+// ==================== Open File ====================
 function openFile() {
     if (window.pywebview && window.pywebview.api) {
         window.pywebview.api.open_file_dialog().then(function(result) {
@@ -699,7 +884,7 @@ function openFile() {
     }
 }
 
-// ==================== 键盘 ====================
+// ==================== Keyboard ====================
 document.addEventListener('keydown', function(e) {
     if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' ||
         e.target.tagName === 'SELECT') return;
@@ -723,7 +908,7 @@ document.addEventListener('keydown', function(e) {
     }
 });
 
-// ==================== pywebview 就绪 ====================
+// ==================== pywebview Ready ====================
 function onReady() {
     if (window.pywebview && window.pywebview.api) {
         window.pywebview.api.on_ready();
@@ -756,7 +941,7 @@ class PresentationAPI:
     def set_window(self, window):
         self.window = window
 
-    # ---------- JS 可调用的方法 ----------
+    # ---------- JS-callable methods ----------
 
     def on_ready(self):
         if self.pending_file:
@@ -767,7 +952,7 @@ class PresentationAPI:
                 self.window.evaluate_js(f'initSlides({json.dumps(result)})')
 
     def open_file_dialog(self):
-        file_types = ('演示文件 (*.slidehtml;*.html;*.htm)', '所有文件 (*.*)')
+        file_types = ('Presentation files (*.slidehtml;*.html;*.htm)', 'All files (*.*)')
         result = self.window.create_file_dialog(
             webview.OPEN_DIALOG,
             file_types=file_types
@@ -778,7 +963,6 @@ class PresentationAPI:
         return self.load_file(path)
 
     def get_template_css(self, tpl_key):
-        """返回指定模板的 CSS"""
         tpl = TEMPLATES.get(tpl_key, TEMPLATES['none'])
         return tpl['css']
 
@@ -806,21 +990,30 @@ class PresentationAPI:
             with open(path, 'r', encoding='utf-8') as f:
                 content = f.read()
         except Exception as e:
-            logger.error(f'读取文件失败: {e}')
+            logger.error(f'Failed to read file: {e}')
             return None
 
         self.current_file = path
         self.current_index = 0
 
-        # 提取 <head>
+        # Extract <head>
         head_match = re.search(r'<head[^>]*>(.*?)</head>', content, re.DOTALL | re.IGNORECASE)
         head_html = head_match.group(1).strip() if head_match else ''
 
-        # 提取 <body>
+        # Extract <body>
         body_match = re.search(r'<body[^>]*>(.*?)</body>', content, re.DOTALL | re.IGNORECASE)
         body_html = body_match.group(1) if body_match else content
 
-        # 提取 <div class="slide..."> 块
+        # Extract ratio from meta tag
+        ratio = None
+        ratio_match = re.search(
+            r'<meta\s+name=["\']ratio["\']\s+content=["\']([^"\']+)["\']',
+            content, re.IGNORECASE
+        )
+        if ratio_match:
+            ratio = ratio_match.group(1).strip()
+
+        # Extract <div class="slide..."> blocks
         slides = []
         for m in re.finditer(
             r'<div\s+class=["\']slide\b[^"\']*["\'][^>]*>',
@@ -831,18 +1024,18 @@ class PresentationAPI:
             slides.append(full_tag + inner + '</div>')
 
         if not slides:
-            logger.warning('未找到 class="slide" 的元素，将整个页面作为一页显示')
+            logger.warning('No slide elements found, showing entire body as one page')
             slides = [body_html]
 
-        # 提取 body 内的 <script>
+        # Extract body <script> tags
         body_scripts = re.findall(r'<script\b[^>]*>.*?</script>', body_html, re.DOTALL | re.IGNORECASE)
 
-        # 提取标题
+        # Extract title
         title_match = re.search(r'<title[^>]*>(.*?)</title>', content, re.IGNORECASE)
         title = title_match.group(1).strip() if title_match else os.path.splitext(os.path.basename(path))[0]
 
         total = len(slides)
-        logger.info(f'已加载: {os.path.basename(path)} ({total} 页)')
+        logger.info(f'Loaded: {os.path.basename(path)} ({total} slides)')
 
         return {
             'title': title,
@@ -850,7 +1043,8 @@ class PresentationAPI:
             'total': total,
             'head': head_html,
             'scripts': body_scripts,
-            'base_url': 'file:///' + os.path.dirname(path).replace('\\', '/') + '/'
+            'base_url': 'file:///' + os.path.dirname(path).replace('\\', '/') + '/',
+            'ratio': ratio
         }
 
     def update_index(self, index):
@@ -869,14 +1063,14 @@ class PresentationAPI:
             self.window.toggle_fullscreen()
 
 
-# ==================== 主程序 ====================
+# ==================== Main ====================
 def main():
     file_path = None
     if len(sys.argv) > 1:
         arg = sys.argv[1]
         if os.path.isfile(arg):
             file_path = os.path.abspath(arg)
-            logger.info(f'命令行文件: {file_path}')
+            logger.info(f'Command line file: {file_path}')
 
     api = PresentationAPI()
     api.pending_file = file_path
@@ -891,7 +1085,7 @@ def main():
     )
     api.set_window(window)
 
-    logger.info('放映器启动')
+    logger.info('Presenter started')
     webview.start(debug=False)
 
 

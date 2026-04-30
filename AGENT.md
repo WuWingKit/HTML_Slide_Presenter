@@ -29,6 +29,7 @@ HTML 文件中每一页幻灯片必须使用 `<div class="slide">` 包裹：
 <html>
 <head>
     <meta charset="UTF-8">
+    <meta name="ratio" content="16:9">  <!-- 可选：页面比例，支持 16:9, 4:3, auto -->
     <title>演示标题</title>
     <!-- 可选：自定义样式 -->
     <style>
@@ -60,39 +61,35 @@ HTML 文件中每一页幻灯片必须使用 `<div class="slide">` 包裹：
 1. 读取 HTML 文件
 2. 提取 `<head>` 中的 `<style>` / `<link rel="stylesheet">`
 3. 提取 `<body>` 中所有 `<div class="slide...">...</div>`
-4. 设置 `<base href="file:///文件所在目录/">` 用于解析相对路径
-5. 将用户样式注入 `<head>`，将 slide 元素注入 DOM
-6. 每次显示一个 `.slide`，通过 `display: none/flex !important` 控制显隐
+4. 提取 `<meta name="ratio">` 设置页面比例（默认 16:9）
+5. 设置 `<base href="file:///文件所在目录/">` 用于解析相对路径
+6. 将用户样式注入 `<head>`，将 slide 元素注入 DOM
+7. 幻灯片以 16:9 比例居中显示在视口中，通过 `display: none/block` 控制显隐
 
 ### 2.2 模板系统
 
-放映器内置 5 套 CSS 模板。模板通过 `.presenter-tpl .slide` 选择器注入样式，**优先级高于用户样式**（使用 `!important`）。
+放映器内置 6 套 CSS 模板。模板通过 `.presenter-tpl .slide` 选择器注入样式，仅覆盖视觉属性（颜色、背景、字体等）。
 
 模板控制的属性：
 - `background` — 背景色/渐变
 - `color` — 文字颜色
 - `font-family` — 字体
-- `font-size` — 使用 `vw` 单位（视口宽度百分比），实现自适应缩放
 - `padding` — 使用 `vh` / `vw` 单位
-- `width: 100vw; height: 100vh` — 全屏铺满
 
-模板字体大小参考：
-- `h1`: `5vw`（约 64px @ 1280px 宽）
-- `h2`: `3.5vw`（约 45px）
-- `h3`: `2.8vw`（约 36px）
-- `p/li`: `2vw`（约 26px）
-- `code`: `1.8vw`（约 23px）
+放映器通过 `clamp()` 函数提供响应式字体大小，模板只需覆盖视觉样式（颜色、背景等）。
+
+模板字体大小参考（clamp 值）：
+- `h1`: `clamp(28px, 4.5vw, 72px)`
+- `h2`: `clamp(22px, 3.2vw, 52px)`
+- `h3`: `clamp(18px, 2.5vw, 40px)`
+- `p/li`: `clamp(14px, 1.8vw, 28px)`
 
 ### 2.3 显隐机制
 
 显隐通过两层控制：
 
 1. **JS 内联样式**（最高优先级）：`element.style.display = 'none'` 隐藏，`element.style.display = ''` 移除内联让 CSS 接管
-2. **CSS `.active` 类**：`.slide.active { display: flex; }` 确保活动幻灯片以 flex 布局显示
-
-模板 CSS 中：
-- `.presenter-tpl .slide` — 控制背景、颜色、字体、尺寸（不设 display）
-- `.presenter-tpl .slide.active` — 控制 display: flex 和 flex 布局属性
+2. **CSS `.active` 类**：`.slide.active { display: block; }` 确保活动幻灯片显示
 
 切换幻灯片时 JS 同时操作内联样式和 `.active` 类，确保模板切换后状态正确。
 
@@ -107,7 +104,7 @@ HTML 文件中每一页幻灯片必须使用 `<div class="slide">` 包裹：
 1. **询问用户**：
    - 演示主题和内容大纲
    - 选择方式：使用预设模板（推荐非技术用户）还是自定义设计版面
-   - 如果选模板：询问偏好风格（简约白底/深色科技/渐变多彩/商务蓝/水墨风）
+   - 如果选模板：询问偏好风格（简约白底/深色科技/渐变多彩/商务蓝/水墨风/Nord 冷调）
    - 如果选自定义：由 Agent 根据主题设计独特的视觉风格
 
 2. **生成 HTML**：
@@ -251,12 +248,13 @@ CSS 入场动画建议：
 
 | 模板 ID | 名称 | 背景 | 字体 | 适合场景 |
 |---------|------|------|------|---------|
-| `none` | 不使用模板 | 文件自带 | 文件自带 | 自定义设计 |
+| `none` | 自定义样式 | 文件自带 | 文件自带 | 自定义设计 |
 | `white` | 简约白底 | #ffffff | Microsoft YaHei | 课堂、学术 |
 | `dark` | 深色科技 | 深蓝渐变 | Consolas + YaHei | 技术分享 |
 | `gradient` | 渐变多彩 | 每页不同渐变 | YaHei | 答辩、发布 |
-| `business` | 商务蓝 | #f5f7fa + 蓝色顶部条 | YaHei | 工作汇报 |
+| `business` | 商务蓝 | #f8fafc + 蓝色顶部条 | YaHei | 工作汇报 |
 | `ink` | 水墨风 | #faf8f5 | KaiTi | 文化、文学 |
+| `nord` | Nord 冷调 | #2e3440 | YaHei | 技术文档、北欧风 |
 
 ---
 
@@ -266,4 +264,5 @@ CSS 入场动画建议：
 2. **不要在 `.slide` 上设置 `position: fixed`**：会导致幻灯片脱离容器
 3. **`<script>` 中不要覆盖 `document.onkeydown`**：会与翻页快捷键冲突，改用 `addEventListener`
 4. **文件编码必须是 UTF-8**
-5. **每个 `.slide` 建议设置 `width: 100vw; height: 100vh`**：确保铺满窗口
+5. **每个 `.slide` 建议设置 `width: 100%; height: 100%`**：确保铺满容器（不要用 100vw/100vh，因为幻灯片在 16:9 容器内居中显示）
+6. **可以添加 `<meta name="ratio" content="16:9">`**：设置页面比例，支持 16:9、4:3、auto

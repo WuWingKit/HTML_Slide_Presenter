@@ -17,13 +17,15 @@
 
 A **Windows desktop app** that plays HTML files as slides, just like PowerPoint.
 
-Just mark each slide with `<div class="slide">` and the presenter handles the rest. Choose from 5 built-in templates to instantly polish your presentation — no CSS skills needed.
+Just mark each slide with `<div class="slide">` and the presenter handles the rest. Choose from 6 built-in templates to instantly polish your presentation — no CSS skills needed.
 
 ## Features
 
-- **5 built-in templates** — Clean White / Dark Tech / Gradient / Business Blue / Ink Style
-- **Responsive text** — Uses `vw` units, scales automatically with window size
+- **6 built-in templates** — Clean White / Dark Tech / Gradient / Business Blue / Ink Style / Nord Cool
+- **Responsive text** — Uses `clamp()` units, scales automatically with window size
+- **Centered slides** — 16:9 aspect ratio with automatic centering and letterboxing
 - **Keyboard navigation** — `← →` to flip, `F11` for fullscreen
+- **Progress bar** — Real-time progress indicator at bottom
 - **Double-click to open** — Run `register_file_assoc.bat` once, then open `.slidehtml` directly
 - **Image support** — Relative paths resolved automatically
 - **Full creative freedom** — Use any HTML/CSS/JS, not limited by templates
@@ -40,6 +42,8 @@ register_file_assoc.bat
 # 3. Open the demo
 python player.py demo.slidehtml
 ```
+
+> **v1.0.1 update:** Auto-centered slides, Nord Cool template, progress bar, auto-detect custom styles.
 
 ## 🤖 Generate Slides with AI
 
